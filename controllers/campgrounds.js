@@ -1,0 +1,87 @@
+//we make controlers to make code neater
+const Campground = require('../models/campground');
+const {cloudinary}=require("../cloudinary")
+
+
+module.exports.index=async (req, res) => {
+    const campgrounds = await Campground.find({});
+    res.render('campgrounds/index', { campgrounds })}
+
+
+module.exports.newForm=(req, res) => {
+   
+        res.render('campgrounds/new');
+}
+
+module.exports.PostNewForm=async (req, res, next) => {
+    const campground = new Campground(req.body.campground);
+    
+    campground.images=req.files.map(f =>({url:f.path,filename:f.filename}))//map over array added to req.files by multer
+
+    campground.author=req.user._id;
+    await campground.save();
+console.log(campground);
+    req.flash('doneSucessfully',"Successfully made a campground!")
+    res.redirect(`campgrounds/${campground._id}`)
+
+}
+
+module.exports.showCampground=async (req, res,) => {
+    const campground = await Campground.findById(req.params.id).populate({
+        path:"reviews",
+        populate:{path:'author' }   //to ptopulate the revoew and then populate the author of each review
+            //of the campground
+     } ).populate('author');
+        //populate the author of capmground
+    
+   
+    if(!campground){
+       req.flash('error',"Cannot find that Campground");//if a camp existed and then was deleted
+      return res.redirect('/campgrounds');
+   }
+   
+    res.render('campgrounds/show', { campground });
+}
+
+module.exports.editForm=async (req, res) => {
+    const {id}=req.params;
+
+    const campground = await Campground.findById(req.params.id)
+   if(!campground){
+       req.flash('error','cannot find campground');
+       return res.redirect('/campgrounds')
+   }
+    res.render('campgrounds/edit', { campground });
+}
+
+module.exports.PostEditedForm=async (req, res) => {
+    const { id } = req.params;
+    //this is to prevent someone who isint the author from editing
+      
+    const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
+    const imgs=req.files.map(f =>({url:f.path,filename:f.filename}))//map over array added to req.files by multer
+    campground.images.push(...imgs);
+    await campground.save();
+
+    if(req.body.deleteImages){
+        for(let filename of req.body.deleteImages)
+         cloudinary.uploader.destroy(filename);
+
+         //after deleting image form cloudinary ^ we delete images url from array v
+    await campground.updateOne({$pull:{images:{filename:{$in:req.body.deleteImages}}}})
+    //from the perticular campground, pull from ITS images array , hte image that has a file name that is there in the deleteImages array. 
+    //deleteImages array is made by checkbox in edit page 
+    }
+
+    req.flash('doneSucessfully',"Successfully edited your campground!")
+    res.redirect(`/campgrounds/${campground._id}`)
+}
+
+module.exports.delete=async (req, res) => {
+    const { id } = req.params;
+    await Campground.findByIdAndDelete(id);
+    req.flash('doneSucessfully',"Deleted Campground")
+
+    res.redirect('/campgrounds');
+    
+}

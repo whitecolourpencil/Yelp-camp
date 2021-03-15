@@ -5,52 +5,19 @@ const ExpressError = require('../utils/ExpressError');
 const User=require('../models/user');
 const passport = require('passport');
 
-router.get('/register',(req,res)=>{
+const users=require('../controllers/users');
+const user = require('../models/user');
 
-    res.render('users/register');
+router.get('/register',users.registerForm);
 
-});
+router.post('/register', users.PostRegister);
 
-router.post('/register', async(req,res)=>{
-    try{
-        const {email,username,password}=req.body;
-        const user=new User({email,username});
-        const registerdUser= await User.register(user,password);
-        req.login(registerdUser,err=>{
-            if(err) 
-            console.log(err);
+router.get('/login',users.loginForm);
 
-            res.redirect('/');
-        })        
-    }
-    catch(e)
-    {
-        req.flash('error',e.message);
-        res.redirect('register');
-    }
+router.post('/login',passport.authenticate('local',
+{failureFlash:true,failureRedirect:'/login'}),users.login)
 
-});
-
-router.get('/login',(req,res)=>{
-    res.render('users/login');   
-});
-
-router.post('/login',passport.authenticate('local',{failureFlash:true,failureRedirect:'/login'}),(req,res)=>{
-     //if we have reached this point, the person is aloready auth by passport
-
-     const redirectURL=req.session.returnTo || '/campgrounds';
-     delete req.session.returnTo;
-     res.redirect(redirectURL)
-
-
-
-})
-
-router.get('/logout',(req,res)=>{
-    req.logout();//pasport helped
-    req.flash('success',"Logged out!")
-    res.redirect('/campgrounds')
-})
+router.get('/logout',users.logout)
 
 
 //the error msg is nice cause its from passport.oorg

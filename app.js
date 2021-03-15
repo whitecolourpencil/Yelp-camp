@@ -1,13 +1,15 @@
+if(process.env.NODE_ENV!=='production'){
+    require('dotenv').config();
+}// while we are in the deveopment phase(not deployed)
+//take the variables defined in .env and put in process.envs
+
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const ejsMate = require('ejs-mate');//layout
-const { campgroundSchema, reviewSchema} = require('./schemas.js');
 const ExpressError = require('./utils/ExpressError');
 const methodOverride = require('method-override');
 const session = require('express-session')
-const Campground = require('./models/campground');
-const Review=require("./models/review");
 const User=require("./models/user")
 
 const flash=require("connect-flash");
