@@ -58,6 +58,8 @@
 
     </div>
     <div class="col-6">
+        <div id='map' style='width: 100%; height: 300px;'></div>
+
         <%if(currentUser){%>
 
         <h2>Leave a Review!</h2>
@@ -89,9 +91,7 @@
         <% for(let review of campground.reviews) { %>
             <div class="card mb-3 ">
                 <div class="card-body">
-                    <!-- <h5 class="card-title">Rating: <%= review.rating %></h5> -->
                     <h6 class="card-subtitle mb-2 " style = "text-transform:capitalize"><%=review.author.username%></h6>
-
                     <p class="starability-result" data-rating="<%= review.rating %>">
                         Rated: <%= review.rating %> stars
                     </p>
@@ -110,3 +110,11 @@
 
     </div> 
 </div>
+
+// for map
+<script>
+    const mapToken = '<%-process.env.MAPBOX_TOKEN%>';
+    const campground = <%-JSON.stringify(campground)%>
+</script>
+
+<script src="/javascripts/showPageMap.js"></script>
